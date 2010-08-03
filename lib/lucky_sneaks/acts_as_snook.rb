@@ -9,7 +9,6 @@ module LuckySneaks
       #
       # * <tt>:author_field</tt> - Symbol or string specifying an alternate database field to use for the author attribute. Default: <tt>author</tt>
       # * <tt>:email_field</tt> - Symbol or string specifying an alternate database field to use for the email attribute. Default: +email+
-      # * <tt>:url_field</tt> - Symbol or string specifying an alternate database field to use for the url attribute. Default: +url+
       # * <tt>:body_field</tt> - Symbol or string specifying an alternate database field to use for the body attribute. Default: +body+
       # * <tt>:spam_status_field</tt> - Symbol or string specifying an alternate database field to use for the spam_status attribute. Default: +spam_status+
       # * <tt>:spam_words</tt> - Array of strings which will be added to the list of words which are considered spam markers
@@ -43,7 +42,6 @@ module LuckySneaks
           # Defaults
           :author_field             => :author,
           :email_field              => :email,
-          :url_field                => :url,
           :body_field               => :body,
           :ham_comments_count_field => :ham_comments_count,
           :spam_status_field        => :spam_status
@@ -147,24 +145,17 @@ module LuckySneaks
         deduct_snook_credits(1) if snook_author =~ regex
         deduct_snook_credits(1) if snook_email =~ regex
         deduct_snook_credits(1) if snook_body =~ regex
-        deduct_snook_credits(1) if snook_url =~ regex
       end
     end
     
     def calculate_snook_for_suspect_url
       regex = /http:\/\/\S*(\.html|\.info|\?|&|free)/i
       deduct_snook_credits(1 * snook_body.scan(regex).size)
-      deduct_snook_credits(1) if snook_url =~ regex
     end
     
     def calculate_snook_for_suspect_tld
       regex = /http:\/\/\S*\.(de|pl|cn)/i
       deduct_snook_credits(1 * snook_body.scan(regex).size)
-      deduct_snook_credits(1) if snook_url =~ regex
-    end
-    
-    def calculate_snook_for_url_length
-      deduct_snook_credits(1) if snook_url.length > 30
     end
     
     def calculate_snook_for_lame_body_start
@@ -180,7 +171,7 @@ module LuckySneaks
     end
     
     def calculate_snook_for_consonant_runs
-      [snook_author, snook_email, snook_url, snook_body].each do |snookable|
+      [snook_author, snook_email, snook_body].each do |snookable|
         snookable.scan(/[bcdfghjklmnpqrstvwxz]{5,}/).each do |run|
           deduct_snook_credits run.size - 4
         end
@@ -205,7 +196,6 @@ module LuckySneaks
       calculate_snook_for_spam_words
       calculate_snook_for_suspect_url
       calculate_snook_for_suspect_tld
-      calculate_snook_for_url_length
       calculate_snook_for_lame_body_start
       calculate_snook_for_author_link
       calculate_snook_for_matching_previous_body
@@ -237,10 +227,6 @@ module LuckySneaks
     
     def snook_email
       @snook_email ||= self.send(self.class.fields_for_snooking[:email_field]) || ""
-    end
-    
-    def snook_url
-      @snook_url ||= self.send(self.class.fields_for_snooking[:url_field]) || ""
     end
     
     def snook_body
